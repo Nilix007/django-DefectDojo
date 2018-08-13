@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from dojo.models import System_Settings
-from dojo.utils import (add_breadcrumb,
-                        get_celery_worker_status)
+from dojo.utils import add_breadcrumb, get_celery_worker_status, \
+        _SYSTEM_SETTINGS_CACHE
 from dojo.forms import SystemSettingsForm
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -71,6 +71,7 @@ def system_settings(request):
         form = SystemSettingsForm(request.POST, instance=system_settings_obj)
         if form.is_valid():
             new_settings = form.save()
+            _SYSTEM_SETTINGS_CACHE.clear()
             messages.add_message(request,
                                  messages.SUCCESS,
                                  'Settings saved.',

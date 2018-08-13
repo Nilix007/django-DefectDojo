@@ -9,6 +9,8 @@ from Crypto.Cipher import AES
 from calendar import monthrange
 from datetime import date, datetime
 from math import pi, sqrt
+from threading import currentThread
+from weakref import WeakKeyDictionary
 
 import vobject
 import requests
@@ -1366,12 +1368,20 @@ def prepare_for_view(encrypted_value):
     return decrypted_value
 
 
-def get_system_setting(setting):
-    try:
-        system_settings = System_Settings.objects.get()
-    except:
-        system_settings = System_Settings()
+_SYSTEM_SETTINGS_CACHE = WeakKeyDictionary()  # cleared by middleware
 
+
+def get_system_settings():
+    thread_id = currentThread()
+    system_settings = _SYSTEM_SETTINGS_CACHE.get(thread_id)
+    if system_settings is None:
+        system_settings, _ = System_Settings.objects.get_or_create()
+        _SYSTEM_SETTINGS_CACHE[thread_id] = system_settings
+    return system_settings
+
+
+def get_system_setting(setting):
+    system_settings = get_system_settings()
     return getattr(system_settings, setting, None)
 
 

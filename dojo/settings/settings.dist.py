@@ -141,6 +141,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dojo.middleware.LoginRequiredMiddleware',
+    'dojo.middleware.ClearSystemSettingsCacheMiddleware',
     'dojo.middleware.TimezoneMiddleware'
 )
 

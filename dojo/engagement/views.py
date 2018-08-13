@@ -61,25 +61,22 @@ def engagement_calendar(request):
 
 @user_passes_test(lambda u: u.is_staff)
 def engagement(request):
-    filtered = EngagementFilter(
-        request.GET,
-        queryset=Product.objects.filter(
-            ~Q(engagement=None),
-            engagement__active=True,
-        ).distinct())
+    qs = Product.objects.filter(
+        ~Q(engagement=None),
+        engagement__active=True,
+    ).select_related('prod_type')\
+            .prefetch_related('engagement_set',
+                              'engagement_set__test_set',
+                              'engagement_set__test_set__test_type')
+
+    filtered = EngagementFilter(request.GET, queryset=qs)
     prods = get_page_items(request, filtered.qs, 25)
-    name_words = [
-        product.name for product in Product.objects.filter(
-            ~Q(engagement=None),
-            engagement__active=True,
-        ).distinct()
-    ]
-    eng_words = [
-        engagement.name for product in Product.objects.filter(
-            ~Q(engagement=None),
-            engagement__active=True,
-        ).distinct() for engagement in product.engagement_set.all()
-    ]
+    name_words = list(Product.objects.filter(~Q(engagement=None),
+                                             engagement__active=True)
+                      .values_list('name', flat=True).order_by('name').distinct())
+    eng_words = list(Engagement.objects.filter(~Q(product=None),
+                                               active=True)
+                     .values_list('name', flat=True).order_by('name').distinct())
 
     add_breadcrumb(
         title="Active Engagements",
@@ -90,8 +87,8 @@ def engagement(request):
         request, 'dojo/engagement.html', {
             'products': prods,
             'filtered': filtered,
-            'name_words': sorted(set(name_words)),
-            'eng_words': sorted(set(eng_words)),
+            'name_words': name_words,
+            'eng_words': eng_words,
         })
 
 

@@ -1203,7 +1203,8 @@ class Finding(models.Model):
         self.numerical_severity = Finding.get_numerical_severity(self.severity)
         super(Finding, self).save()
         if (dedupe_option):
-            system_settings = System_Settings.objects.get()
+            from dojo.utils import get_system_settings
+            system_settings = get_system_settings()
             if system_settings.enable_deduplication:
                 from dojo.tasks import async_dedupe
                 from dojo.utils import sync_dedupe
@@ -1250,14 +1251,10 @@ class Finding(models.Model):
                     setattr(self, field, "No %s given" % field)
 
     def severity_display(self):
-        try:
-            system_settings = System_Settings.objects.get()
-            if system_settings.s_finding_severity_naming:
-                return self.numerical_severity
-            else:
-                return self.severity
-
-        except:
+        from dojo.utils import get_system_setting
+        if get_system_setting('s_finding_severity_naming'):
+            return self.numerical_severity
+        else:
             return self.severity
 
     def get_breadcrumbs(self):

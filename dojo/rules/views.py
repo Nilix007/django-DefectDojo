@@ -11,11 +11,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 
 # Local application/library imports
-from dojo.models import Rule,\
-    System_Settings, Finding, Test, Test_Type, Engagement, \
+from dojo.models import Rule, Finding, Test, Test_Type, Engagement, \
     Product, Product_Type, Child_Rule
 from dojo.forms import RuleFormSet, DeleteRuleForm, RuleForm
-from dojo.utils import add_breadcrumb
+from dojo.utils import add_breadcrumb, get_system_settings
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +155,7 @@ def delete_rule(request, tid):
             return HttpResponseRedirect(reverse('rules'))
 
     add_breadcrumb(parent=rule, title="Delete", top_level=False, request=request)
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
     return render(request, 'dojo/delete_rule.html',
                   {'rule': rule,
                    'form': form,

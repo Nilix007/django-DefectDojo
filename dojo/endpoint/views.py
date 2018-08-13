@@ -14,8 +14,9 @@ from django.utils import timezone
 from dojo.filters import EndpointFilter
 from dojo.forms import EditEndpointForm, \
     DeleteEndpointForm, AddEndpointForm, EndpointMetaDataForm
-from dojo.models import Product, Endpoint, Finding, System_Settings
-from dojo.utils import get_page_items, add_breadcrumb, get_period_counts, get_system_setting, Product_Tab
+from dojo.models import Product, Endpoint, Finding
+from dojo.utils import get_page_items, add_breadcrumb, get_period_counts, \
+        get_system_setting, get_system_settings, Product_Tab
 from django.contrib.contenttypes.models import ContentType
 from custom_field.models import CustomFieldValue, CustomField
 
@@ -48,7 +49,7 @@ def vulnerable_endpoints(request):
     paged_endpoints = get_page_items(request, endpoints_query, 25)
     add_breadcrumb(title="Vulnerable Endpoints", top_level=not len(request.GET), request=request)
 
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
 
     product_tab = None
     view_name = "All Endpoints"

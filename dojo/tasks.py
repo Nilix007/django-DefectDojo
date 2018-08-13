@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.utils.http import urlencode
 from celery.utils.log import get_task_logger
 from celery.decorators import task
-from dojo.models import Product, Finding, Engagement, System_Settings
+from dojo.models import Product, Finding, Engagement
 from django.utils import timezone
 
 import pdfkit
@@ -19,7 +19,7 @@ from dojo.celery import app
 from dojo.utils import sync_dedupe, sync_false_history, calculate_grade
 from dojo.reports.widgets import report_widget_factory
 from dojo.utils import add_comment, add_epic, add_issue, update_epic, update_issue, \
-                       close_epic, create_notification, sync_rules
+                       close_epic, create_notification, sync_rules, get_system_settings
 
 import logging
 fmt = getattr(settings, 'LOG_FORMAT', None)
@@ -58,7 +58,7 @@ def add_alerts(self, runinterval):
                             url=reverse('view_engagement', args=(eng.id,)),
                             recipients=[eng.lead])
     """
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
     if system_settings.engagement_auto_close:
         # Close Engagements older than user defined days
         close_days = system_settings.engagement_auto_close_days
@@ -280,7 +280,7 @@ def async_false_history(new_finding, *args, **kwargs):
 @app.task(bind=True)
 def async_dupe_delete(*args, **kwargs):
     logger.info("delete excess duplicates")
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
     if system_settings.delete_dupulicates:
         dupe_max = system_settings.max_dupes
         findings = Finding.objects.all().annotate(num_dupes=Count('duplicate_list')).filter(num_dupes__gt=dupe_max)

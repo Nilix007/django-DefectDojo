@@ -939,7 +939,7 @@ def log_jira_message(text, finding):
 # Adds labels to a Jira issue
 def add_labels(find, issue):
     # Update Label with system setttings label
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
     labels = system_settings.jira_labels.split()
     if len(labels) > 0:
         for label in labels:
@@ -964,7 +964,7 @@ def add_issue(find, push_to_jira):
     if push_to_jira:
         if 'Active' in find.status() and 'Verified' in find.status():
             if ((jpkey.push_all_issues and Finding.get_number_severity(
-                    System_Settings.objects.get().jira_minimum_severity) >
+                    get_system_setting('jira_minimum_severity')) >
                  Finding.get_number_severity(find.severity))):
                 pass
             else:
@@ -1543,8 +1543,7 @@ def create_notification(event=None, **kwargs):
 
 
 def calculate_grade(product):
-    system_settings = System_Settings.objects.get()
-    if system_settings.enable_product_grade:
+    if get_system_setting('enable_product_grade'):
         severity_values = Finding.objects.filter(
             ~Q(severity='Info'),
             active=True,
@@ -1673,7 +1672,7 @@ def add_language(product, language):
 
 # Apply finding template data by matching CWE + Title or CWE
 def apply_cwe_to_template(finding, override=False):
-    if System_Settings.objects.get().enable_template_match or override:
+    if get_system_setting('enable_template_match') or override:
         # Attempt to match on CWE and Title First
         template = Finding_Template.objects.filter(cwe=finding.cwe, title__icontains=finding.title, template_match=True).first()
 

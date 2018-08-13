@@ -8,8 +8,8 @@ from django.utils.safestring import mark_safe, SafeData
 from django.utils.text import normalize_newlines
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from dojo.utils import prepare_for_view, get_system_setting
-from dojo.models import Check_List, FindingImageAccessToken, Finding, System_Settings, JIRA_PKey, Product
+from dojo.utils import prepare_for_view, get_system_setting, get_system_settings
+from dojo.models import Check_List, FindingImageAccessToken, Finding, JIRA_PKey, Product
 import markdown
 from django.db.models import Sum, Case, When, IntegerField, Value
 from django.utils import timezone
@@ -279,7 +279,7 @@ def finding_sla(finding):
 @register.filter(name='product_grade')
 def product_grade(product):
     grade = ""
-    system_settings = System_Settings.objects.get()
+    system_settings = get_system_settings()
     if system_settings.enable_product_grade and product:
         prod_numeric_grade = product.prod_numeric_grade
 

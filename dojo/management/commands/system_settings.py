@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from dojo.models import System_Settings
+from dojo.utils import get_system_settings
+
 
 class Command(BaseCommand):
     help = 'Updates product grade calculation'
@@ -28,6 +29,7 @@ class Command(BaseCommand):
 
             return health
             """
-        system_settings = System_Settings.objects.get(id=1)
+
+        system_settings = get_system_settings()
         system_settings.product_grade = code
         system_settings.save()

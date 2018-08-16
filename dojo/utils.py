@@ -17,10 +17,16 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import get_resolver, reverse
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q, Sum, Case, When, IntegerField, Value, Count
 from django.template.defaultfilters import pluralize
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.contrib import messages
+from django.views.generic import ListView
+from django.views.generic.edit import CreateView, UpdateView
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django_filters.views import FilterView
 from jira import JIRA
 from jira.exceptions import JIRAError
 
@@ -1676,3 +1682,136 @@ def apply_cwe_to_template(finding, override=False):
             finding.references = template.references
 
     return finding
+
+
+class ListFilteredMixin(object):
+    """
+    Mixin that adds support for django-filter.
+    """
+
+    filter_set = None
+
+    def get_filter_set(self):
+        if self.filter_set:
+            return self.filter_set
+        else:
+            raise ImproperlyConfigured(
+                "ListFilterMixin requires either a definition of "
+                "'filter_set' or an implementation of 'get_filter_set()'")
+
+    def get_filter_set_kwargs(self):
+        """
+        Returns the keyword arguments for instanciating the filterset.
+        """
+        return {
+            'data': self.request.GET,
+            'queryset': self.get_base_queryset(),
+        }
+
+    def get_base_queryset(self):
+        """
+        We can decided to either alter the queryset before or after applying the
+        FilterSet
+        """
+        return super(ListFilteredMixin, self).get_queryset()
+
+    def get_constructed_filter(self):
+        # We need to store the instantiated FilterSet cause we use it in
+        # get_queryset and in get_context_data
+        if getattr(self, 'constructed_filter', None):
+            return self.constructed_filter
+        else:
+            f = self.get_filter_set()(**self.get_filter_set_kwargs())
+            self.constructed_filter = f
+            return f
+
+    def get_queryset(self):
+        return self.get_constructed_filter().qs
+
+    def get_context_data(self, **kwargs):
+        kwargs.update({'filter': self.get_constructed_filter()})
+        return super(ListFilteredMixin, self).get_context_data(**kwargs)
+
+
+class ListPaginatedMixin(object):
+    """
+    Mixin that paginates a `ListView`.  The default of 25 elements can be
+    overwritten by the `page_size` query parameter.
+    """
+    def get_paginate_by(self, qs=None):
+        try:
+            return int(self.request.GET['page_size'])
+        except:
+            return 25
+
+
+class BreadcrumbMixin(object):
+    """
+    Mixin that adds a breadcrumb element.
+    """
+    name = None
+    top_level = True
+
+    def get_name(self):
+        if self.name:
+            return self.name
+        else:
+            raise ImproperlyConfigured(
+                "BreadcrumbMixin requires either a definition of "
+                "'name' or an implementation of 'get_name()'")
+
+    def render_to_response(self, context, **kwargs):
+        if self.request.method == 'GET':
+            add_breadcrumb(title=self.get_name(), top_level=self.top_level, request=self.request)
+        return super(BreadcrumbMixin, self).render_to_response(context, **kwargs)
+
+
+class StaffUserRequiredMixin(UserPassesTestMixin):
+    """
+    Mixing that requires the requesting user to be a staff user.
+    """
+    def test_func(self):
+        return self.request.user.is_staff
+
+
+class SuccessMessageMixin(object):
+    """
+    Add a success message on successful form submission.
+    """
+    success_message = ''
+
+    def form_valid(self, form):
+        response = super(SuccessMessageMixin, self).form_valid(form)
+        success_message = self.get_success_message(form.cleaned_data)
+        if success_message:
+            messages.success(self.request, success_message, extra_tags='alert-success')
+        return response
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % cleaned_data
+
+
+class DojoListView(ListPaginatedMixin, BreadcrumbMixin, FilterView):
+    """
+    Default view for listing objects.
+
+    Supports django-filter, pagination, and breadcrumbs.
+    """
+
+
+class DojoCreateView(StaffUserRequiredMixin, BreadcrumbMixin, SuccessMessageMixin, CreateView):
+    """
+    Default view for creating objects.
+
+    Supports success messages and breadcrumbs.  Requires that the user is a
+    staff user.
+    """
+
+
+class DojoUpdateView(StaffUserRequiredMixin, BreadcrumbMixin, SuccessMessageMixin, UpdateView):
+    """
+    Default view for updating objects.
+
+    Supports success messages and breadcrumbs.  Requires that the user is a
+    staff user.
+    """

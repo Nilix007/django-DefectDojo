@@ -28,13 +28,13 @@
                     </h3>
                 </div>
                 <div id="the-filters" class="panel-body collapse {% if request.META.QUERY_STRING %}in{% endif %}">
-                    {% include "dojo/filter_snippet.html" with form=ptl.form %}
+                    {% include "dojo/filter_snippet.html" with form=filter.form %}
                 </div>
             </div>
-            {% if pts %}
+            {% if product_types %}
 
                 <div class="clearfix">
-                    {% include "dojo/paging_snippet.html" with page=pts page_size=True %}
+                    {% include "dojo/paging_snippet.html" with page=page_obj page_size=True %}
                 </div>
 
                 <div class="panel panel-default table-responsive">
@@ -50,7 +50,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for pt in pts %}
+                        {% for pt in product_types %}
                             <tr>
                                 <td><a href="{% url 'product_type_metrics' pt.id %}"> {{ pt.name }} </a></td>
                                 <td><a href="{% url 'product' %}?prod_type={{ pt.id }}">{{ pt.products_count }}</a></td>
@@ -86,7 +86,7 @@
                     </table>
                 </div>
                 <div class="clearfix">
-                    {% include "dojo/paging_snippet.html" with page=pts page_size=True %}
+                    {% include "dojo/paging_snippet.html" with page=page_obj page_size=True %}
                 </div>
             {% else %}
                 <p class="text-center">No product types found.</p>

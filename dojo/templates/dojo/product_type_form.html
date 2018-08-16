@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+{% if form.instance.id %}
+    <h3> Edit Product Type {{ pt.name }}</h3>
+{% else %}
     <h3> Register a new Product Type </h3>
-    <form class="form-horizontal" action="{%  url 'add_product_type' %}" method="post">{% csrf_token %}
+{% endif %}
+    <form class="form-horizontal" method="post">{% csrf_token %}
         {% include "dojo/form_fields.html" with form=form %}
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">

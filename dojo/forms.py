@@ -133,12 +133,6 @@ class MonthYearWidget(Widget):
         return data.get(name, None)
 
 
-class Product_TypeForm(forms.ModelForm):
-    class Meta:
-        model = Product_Type
-        fields = ['name', 'critical_product', 'key_product']
-
-
 class Test_TypeForm(forms.ModelForm):
     class Meta:
         model = Test_Type
@@ -210,18 +204,13 @@ class Product_TypeProductForm(forms.ModelForm):
                                   required=True)
 
     authorized_users = forms.ModelMultipleChoiceField(
-        queryset=None,
+        queryset=User.objects.exclude(is_staff=True),
         required=False, label="Authorized Users")
-
-    def __init__(self, *args, **kwargs):
-        non_staff = User.objects.exclude(is_staff=True)
-        super(Product_TypeProductForm, self).__init__(*args, **kwargs)
-        self.fields['authorized_users'].queryset = non_staff
 
     class Meta:
         model = Product
-        fields = ['name', 'description', 'product_manager', 'technical_contact', 'team_manager', 'prod_type',
-                  'authorized_users']
+        fields = ['name', 'description', 'product_manager',
+                  'technical_contact', 'team_manager', 'authorized_users']
 
 
 class ImportScanForm(forms.Form):

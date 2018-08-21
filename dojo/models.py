@@ -1148,7 +1148,7 @@ class Finding(models.Model):
 
     def jira(self):
         try:
-            jissue = JIRA_Issue.objects.get(finding=self)
+            jissue = self.jira_issue
         except:
             jissue = None
             pass

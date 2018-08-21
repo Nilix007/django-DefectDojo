@@ -372,16 +372,13 @@ class OpenFindingFilter(DojoFilter):
         # Don't show the product filter on the product finding view
         if self.pid:
             del self.form.fields['test__engagement__product']
-        cwe = dict()
-        cwe = dict([finding.cwe, finding.cwe]
-                   for finding in self.queryset.distinct()
-                   if finding.cwe > 0 and finding.cwe not in cwe)
-        cwe = collections.OrderedDict(sorted(cwe.items()))
+        cwe = {c: c for c in self.queryset
+               .values_list('cwe', flat=True).filter(cwe__gt=0)
+               .order_by('cwe').distinct()}
+        cwe = collections.OrderedDict(cwe.items())
         self.form.fields['cwe'].choices = cwe.items()
-        sevs = dict()
-        sevs = dict([finding.severity, finding.severity]
-                    for finding in self.queryset.distinct()
-                    if finding.severity not in sevs)
+        sevs = {s: s for s in self.queryset
+                .values_list('severity', flat=True).order_by().distinct()}
         self.form.fields['severity'].choices = sevs.items()
         if self.user is not None and not self.user.is_staff:
             self.form.fields[

@@ -60,6 +60,12 @@ def open_findings(request, pid=None, view=None):
         else:
             findings = Finding.objects.filter(active=True, duplicate=False).order_by('numerical_severity')
 
+    findings = findings.select_related('reporter',
+                                       'duplicate_finding',
+                                       'jira_issue',
+                                       'test__engagement__product')\
+            .prefetch_related('risk_acceptance_set', 'notes')
+
     if request.user.is_staff:
         findings = OpenFingingSuperFilter(
             request.GET, queryset=findings, user=request.user, pid=pid)
@@ -69,12 +75,12 @@ def open_findings(request, pid=None, view=None):
         findings = OpenFindingFilter(
             request.GET, queryset=findings, user=request.user, pid=pid)
 
-    title_words = [
-        word for finding in findings.qs for word in finding.title.split()
+    title_words = set(
+        word for title in findings.qs.values_list('title', flat=True).order_by().distinct() for word in title.split()
         if len(word) > 2
-    ]
+    )
 
-    title_words = sorted(set(title_words))
+    title_words = sorted(title_words)
     paged_findings = get_page_items(request, findings.qs, 25)
 
     product_type = None

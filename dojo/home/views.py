@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
+from django.db.models import Count
 
 from dojo.models import Finding, Engagement, Risk_Acceptance
 from dojo.utils import add_breadcrumb, get_punchcard_data
@@ -68,9 +69,8 @@ def dashboard(request):
                   'Low': 0,
                   'Info': 0}
 
-    for finding in findings:
-        if finding.severity:
-            sev_counts[finding.severity] += 1
+    sev_counts.update(findings.exclude(severity=None).order_by()
+                      .values_list('severity').annotate(Count('severity')))
 
     by_month = list()
 
@@ -83,10 +83,7 @@ def dashboard(request):
                     now - relativedelta(months=6)]
 
     for date_to_use in dates_to_use:
-        sourcedata = {'y': date_to_use.strftime("%Y-%m"), 'a': 0, 'b': 0,
-                      'c': 0, 'd': 0, 'e': 0}
-
-        for finding in Finding.objects.filter(
+        counts = Finding.objects.filter(
                 reporter=request.user,
                 verified=True,
                 duplicate=False,
@@ -97,17 +94,16 @@ def dashboard(request):
                                       date_to_use.month,
                                       monthrange(date_to_use.year,
                                                  date_to_use.month)[1],
-                                      tzinfo=timezone.get_current_timezone())]):
-            if finding.severity == 'Critical':
-                sourcedata['a'] += 1
-            elif finding.severity == 'High':
-                sourcedata['b'] += 1
-            elif finding.severity == 'Medium':
-                sourcedata['c'] += 1
-            elif finding.severity == 'Low':
-                sourcedata['d'] += 1
-            elif finding.severity == 'Info':
-                sourcedata['e'] += 1
+                                      tzinfo=timezone.get_current_timezone())]) \
+                .order_by().values_list('severity').annotate(Count('severity'))
+
+        sourcedata = {'y': date_to_use.strftime("%Y-%m"),
+                      'a': counts.get('Critical', 0),
+                      'b': counts.get('High', 0),
+                      'c': counts.get('Medium', 0),
+                      'd': counts.get('Low', 0),
+                      'e': counts.get('Info', 0)}
+
         by_month.append(sourcedata)
 
     start_date = now - timedelta(days=180)

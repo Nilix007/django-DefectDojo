@@ -942,9 +942,11 @@ def add_labels(find, issue):
     issue.update(fields={"labels": issue.fields.labels})
 
 
-def jira_long_description(find_description, find_id, jira_conf_finding_text):
-    return find_description + "\n\n*Dojo ID:* " + str(
-        find_id) + "\n\n" + jira_conf_finding_text
+def jira_long_description(finding, jira_conf_finding_text):
+    return render_to_string('dojo/jira_issue_description', context={
+        'finding': finding,
+        'finding_text': jira_conf_finding_text,
+    })
 
 
 def add_issue(find, push_to_jira):
@@ -975,7 +977,7 @@ def add_issue(find, push_to_jira):
                                 },
                             ],
                             description=jira_long_description(
-                                find.long_desc(), find.id,
+                                find,
                                 jira_conf.finding_text),
                             issuetype={'name': jira_conf.default_issue_type},
                             priority={
@@ -986,7 +988,7 @@ def add_issue(find, push_to_jira):
                             project=jpkey.project_key,
                             summary=find.title,
                             description=jira_long_description(
-                                find.long_desc(), find.id,
+                                find,
                                 jira_conf.finding_text),
                             issuetype={'name': jira_conf.default_issue_type},
                             priority={
@@ -1087,7 +1089,7 @@ def update_issue(find, old_status, push_to_jira):
 
             issue.update(
                 summary=find.title,
-                description=jira_long_description(find.long_desc(), find.id,
+                description=jira_long_description(find,
                                                   jira_conf.finding_text),
                 priority={'name': jira_conf.get_priority(find.severity)},
                 fields=fields)

@@ -19,3 +19,7 @@ h5. Impact:
 
 h5. References:
 {{finding.references}}
+
+h5. Dojo ID: {{finding.id}}
+
+{{finding_text}}

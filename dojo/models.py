@@ -23,7 +23,6 @@ from tagging.registry import register as tag_register
 from multiselectfield import MultiSelectField
 from django import forms
 from django.utils.translation import gettext as _
-from django.template.loader import get_template
 
 fmt = getattr(settings, 'LOG_FORMAT', None)
 lvl = getattr(settings, 'LOG_LEVEL', logging.DEBUG)
@@ -1180,11 +1179,6 @@ class Finding(models.Model):
             jconf = None
             pass
         return jconf
-
-    def long_desc(self):
-        return get_template('dojo/jira_issue_description').render(context={
-            'finding': self
-        })
 
     def save(self, dedupe_option=True, rules_option=True, *args, **kwargs):
         # Make changes to the finding before it's saved to add a CWE template

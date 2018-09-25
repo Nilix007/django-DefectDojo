@@ -1190,7 +1190,7 @@ class Finding(models.Model):
         long_desc += '*Description*: \n' + self.description + '\n\n'
         long_desc += '*Mitigation*: \n' + self.mitigation + '\n\n'
         long_desc += '*Impact*: \n' + self.impact + '\n\n'
-        long_desc += '*References*:' + self.references
+        long_desc += '*References*: \n' + self.references
         return long_desc
 
     def save(self, dedupe_option=True, rules_option=True, *args, **kwargs):

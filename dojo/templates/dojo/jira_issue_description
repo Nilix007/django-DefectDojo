@@ -1,3 +1,5 @@
+{{finding_text}}
+
 h2. {{finding.title}}
 
 h5. Severity: {{finding.severity}}
@@ -21,5 +23,3 @@ h5. References:
 {{finding.references}}
 
 h5. Dojo ID: {{finding.id}}
-
-{{finding_text}}

@@ -1,0 +1,21 @@
+h2. {{finding.title}}
+
+h5. Severity: {{finding.severity}}
+
+{% with finding.endpoints.all as endpoints %}{% if endpoints %}
+h5. Systems:
+{% for endpoint in endpoints %}
+* {{endpoint}}
+{% endfor %}{% endif %}{% endwith %}
+
+h5. Description:
+{{finding.description}}
+
+h5. Mitigation:
+{{finding.mitigation}}
+
+h5. Impact:
+{{finding.impact}}
+
+h5. References:
+{{finding.references}}

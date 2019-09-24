@@ -55,7 +55,7 @@
                             {% if "enable_jira"|get_system_setting %}
                             <th>Jira</th>
                             {% endif %}
-                            <th> Findings</th>
+                            <th>{% dojo_sort request 'Findings' 'findings_count' %}</th>
                             <th> Endpoints</th>
                             <th> Contact</th>
                             <th>{% dojo_sort request 'Product Type' 'prod_type__name' %}</th>

@@ -34,11 +34,11 @@ logger = logging.getLogger(__name__)
 
 def product(request):
     if request.user.is_staff:
-        initial_queryset = Product.objects.all()
+        initial_queryset = Product.objects.with_findings_count().all()
         name_words = [product.name for product in
                       Product.objects.all()]
     else:
-        initial_queryset = Product.objects.filter(
+        initial_queryset = Product.objects.with_findings_count().filter(
             authorized_users__in=[request.user])
         name_words = [word for product in
                       Product.objects.filter(

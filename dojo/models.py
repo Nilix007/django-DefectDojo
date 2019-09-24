@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.utils.timezone import now
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToCover
@@ -511,6 +511,8 @@ class Product(models.Model):
     internet_accessible = models.BooleanField(default=False, help_text=_('Specify if the application is accessible from the public internet.'))
     regulations = models.ManyToManyField(Regulation, blank=True)
 
+    objects = ProductManager()
+
     def __unicode__(self):
         return self.name
 
@@ -519,15 +521,6 @@ class Product(models.Model):
 
     class Meta:
         ordering = ('name',)
-
-    @property
-    def findings_count(self):
-        return Finding.objects.filter(mitigated__isnull=True,
-                                      verified=True,
-                                      false_p=False,
-                                      duplicate=False,
-                                      out_of_scope=False,
-                                      test__engagement__product=self).count()
 
     @property
     def active_engagement_count(self):
@@ -619,6 +612,18 @@ class Product(models.Model):
     @property
     def get_product_type(self):
         return self.prod_type if self.prod_type is not None else 'unknown'
+
+
+class ProductManager(models.Manager):
+    def with_findings_count(self):
+        f = Q(
+            engagement__test__finding__mitigated__isnull=True,
+            engagement__test__finding__verified=True,
+            engagement__test__finding__false_p=False,
+            engagement__test__finding__duplicate=False,
+            engagement__test__finding__out_of_scope=False,
+            )
+        return self.annotate(findings_count=Count('engagement__test__finding', filter=f))
 
 
 class ScanSettings(models.Model):

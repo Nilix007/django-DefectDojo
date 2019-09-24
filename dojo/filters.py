@@ -288,10 +288,12 @@ class ProductFilter(DojoFilter):
         fields=(
             ('name', 'name'),
             ('prod_type__name', 'prod_type__name'),
+            ('findings_count', 'findings_count'),
         ),
         field_labels={
             'name': 'Product Name',
             'prod_type__name': 'Product Type',
+            'findings_count': 'Findings',
         }
 
     )
@@ -312,7 +314,7 @@ class ProductFilter(DojoFilter):
 
     class Meta:
         model = Product
-        fields = ['name', 'prod_type']
+        fields = ['name', 'prod_type', 'findings_count']
         exclude = ['tags']
 
 

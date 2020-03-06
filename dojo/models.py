@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils.deconstruct import deconstructible
 from django.utils.timezone import now
 from imagekit.models import ImageSpecField
@@ -574,14 +574,18 @@ class Product(models.Model):
     class Meta:
         ordering = ('name',)
 
-    @property
-    def findings_count(self):
-        return Finding.objects.filter(mitigated__isnull=True,
-                                      verified=True,
-                                      false_p=False,
-                                      duplicate=False,
-                                      out_of_scope=False,
-                                      test__engagement__product=self).count()
+    class ProductManager(models.Manager):
+        def with_findings_count(self):
+            return self.annotate(findings_count=Count('engagement__test__finding',
+                filter=Q(
+                    engagement__test__finding__mitigated__isnull=True,
+                    engagement__test__finding__verified=True,
+                    engagement__test__finding__false_p=False,
+                    engagement__test__finding__duplicate=False,
+                    engagement__test__finding__out_of_scope=False,
+                    )))
+
+    objects = ProductManager()
 
     @property
     def active_engagement_count(self):
